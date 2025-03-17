@@ -20,7 +20,7 @@ def blackjack():
     main_croupier = [tirer_carte(), tirer_carte()]
 
     print(f"Votre première carte: {main_joueur[0][0]} (Score: {calculer_score(main_joueur)})")
-    print(f"Carte visible du croupier: {main_croupier[0][0]}")
+    print(f"Carte du croupier: {main_croupier[0][0]}")
 
     while True:
         if calculer_score(main_joueur) == 21:
