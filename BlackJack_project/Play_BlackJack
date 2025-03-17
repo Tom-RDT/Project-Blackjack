@@ -6,7 +6,7 @@ def tirer_carte():
     if carte in ['Valet', 'Dame', 'Roi']:
         return (carte, 10)
     elif carte == 'As':
-        choix = input("Vous avez tiré un As. Voulez-vous qu'il vaille 11 ou 1 ? (11/1): ").strip()
+        choix = input("Vous avez tiré un As. Voulez-vous qu'il compte pour 11 ou 1 ? (11/1): ").strip()
         return (carte, 11 if choix == '11' else 1)
     else:
         return (carte, carte)
