@@ -35,7 +35,7 @@ def blackjack():
             nouvelle_carte = tirer_carte()
             main_joueur.append(nouvelle_carte)
             print(f"Vous avez tiré un {nouvelle_carte[0]}. Votre main: {[c[0] for c in main_joueur]} (Score: {calculer_score(main_joueur)})")
-            print(f"Carte visible du croupier: {main_croupier[0][0]}")
+            print(f"Carte du croupier: {main_croupier[0][0]}")
         elif action == 'n':
             break
 
