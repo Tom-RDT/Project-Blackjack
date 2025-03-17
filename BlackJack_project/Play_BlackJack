@@ -16,40 +16,40 @@ def calculer_score(main):
     return score
 
 def blackjack():
-    joueur = [tirer_carte()]
-    croupier = [tirer_carte(), tirer_carte()]
+    main_joueur = [tirer_carte()]
+    main_croupier = [tirer_carte(), tirer_carte()]
 
-    print(f"Votre première carte: {joueur[0][0]} (Score: {calculer_score(joueur)})")
-    print(f"Carte du croupier: {croupier[0][0]}")
+    print(f"Votre première carte: {main_joueur[0][0]} (Score: {calculer_score(main_joueur)})")
+    print(f"Carte du croupier: {main_croupier[0][0]}")
 
     while True:
-        if calculer_score(joueur) == 21:
+        if calculer_score(main_joueur) == 21:
             print("Vous avez 21! Félicitations, vous avez gagné!")
             return
-        if calculer_score(joueur) > 21:
+        if calculer_score(main_joueur) > 21:
             print("Vous avez dépassé 21. Vous perdez!")
             return
 
         action = input("Voulez-vous tirer une autre carte ? (o/n): ").strip().lower()
         if action == 'o':
             nouvelle_carte = tirer_carte()
-            joueur.append(nouvelle_carte)
-            print(f"Vous avez tiré un {nouvelle_carte[0]}. Votre main: {[c[0] for c in joueur]} (Score: {calculer_score(joueur)})")
-            print(f"Carte du croupier: {croupier[0][0]}")
+            main_joueur.append(nouvelle_carte)
+            print(f"Vous avez tiré un {nouvelle_carte[0]}. Votre main: {[c[0] for c in main_joueur]} (Score: {calculer_score(main_joueur)})")
+            print(f"Main du croupier: {[c[0] for c in main_croupier]} (Score: {calculer_score(main_croupier)})")
         elif action == 'n':
             break
 
-    score_joueur = calculer_score(joueur)
+    score_joueur = calculer_score(main_joueur)
 
-    print(f"Main du croupier: {[c[0] for c in croupier]} (Score: {calculer_score(croupier)})")
+    print(f"Main du croupier: {[c[0] for c in main_croupier]} (Score: {calculer_score(main_croupier)})")
 
-    while calculer_score(croupier) < 17:
-        croupier.append(tirer_carte())
-        print(f"Main du croupier: {[c[0] for c in croupier]} (Score: {calculer_score(croupier)})")
-        if calculer_score(croupier) >= 21:
+    while calculer_score(main_croupier) < 17:
+        main_croupier.append(tirer_carte())
+        print(f"Main du croupier: {[c[0] for c in main_croupier]} (Score: {calculer_score(main_croupier)})")
+        if calculer_score(main_croupier) >= 21:
             break
 
-    score_croupier = calculer_score(croupier)
+    score_croupier = calculer_score(main_croupier)
 
     if score_croupier == 21:
         print("Le croupier a 21! Vous perdez!")
