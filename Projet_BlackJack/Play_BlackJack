@@ -1,0 +1,158 @@
+import random
+import tkinter as tk
+from tkinter import messagebox
+import os
+
+# === Dimension ===
+LARGEUR_FENETRE = 900
+HAUTEUR_FENETRE = 516
+CHEMIN_IMAGES = os.path.join(os.path.dirname(__file__), "images")
+TAILLE_CARTE = (71, 96)
+
+decalage_cartes = 30
+position_joueur_y = 330
+position_croupier_y = 90
+
+# === VARIABLES GLOBALES ===
+images_cartes = {}
+points_joueur = 0
+points_croupier = 0
+
+symboles = {
+    'As': 'As', 'Valet': 'Valet', 'Dame': 'Dame', 'Roi': 'Roi',
+    '2': '2', '3': '3', '4': '4', '5': '5', '6': '6',
+    '7': '7', '8': '8', '9': '9', '10': '10'
+}
+
+# === CHARGEMENT DES IMAGES ===
+def charger_images():
+    for nom in symboles.values():
+        chemin = os.path.join(CHEMIN_IMAGES, f"{nom}.gif")
+        try:
+            images_cartes[nom] = tk.PhotoImage(file=chemin)
+        except Exception as e:
+            print(f"Erreur pour {nom}: {e}")
+    images_cartes['back'] = tk.PhotoImage(file=os.path.join(CHEMIN_IMAGES, "back.gif"))
+    global table_image
+    table_image = tk.PhotoImage(file=os.path.join(CHEMIN_IMAGES, "table_blackjack.gif"))
+
+# === LOGIQUE DU JEU ===
+def tirer_carte():
+    carte = random.choice(list(symboles.keys()))
+    return (carte, 11 if carte == 'As' else 10 if carte in ['Valet', 'Dame', 'Roi'] else int(carte))
+
+def calculer_score(main):
+    score = sum(c[1] for c in main)
+    while score > 21 and any(c[0] == 'As' and c[1] == 11 for c in main):
+        score -= 10
+        main[main.index(('As', 11))] = ('As', 1)
+    return score
+
+# === AFFICHAGE ===
+def afficher_texte(canvas, x, y, texte, taille=12, gras=False):
+    font = ("Arial", taille, "bold" if gras else "normal")
+    canvas.create_text(x, y, text=texte, fill="white", font=font, tags="cartes")
+
+def dessiner_cartes(canvas, main_joueur, main_croupier, reveler_carte_croupier=False):
+    canvas.delete("cartes")
+    canvas.create_image(0, 0, image=table_image, anchor="nw", tags="cartes")
+
+    score_joueur = calculer_score(main_joueur)
+    score_croupier = calculer_score(main_croupier) if reveler_carte_croupier else "?"
+
+    afficher_texte(canvas, 450, 30, "CROUPIER", 14, True)
+    afficher_texte(canvas, 450, 60, f"Score : {score_croupier}")
+    afficher_texte(canvas, 450, 460, "JOUEUR", 14, True)
+    afficher_texte(canvas, 450, 490, f"Score : {score_joueur}")
+
+    decalage_croupier = (LARGEUR_FENETRE - (len(main_croupier) * decalage_cartes)) // 2
+    for j, (nom, _) in enumerate(main_croupier):
+        image = images_cartes['back'] if j == 1 and not reveler_carte_croupier else images_cartes.get(nom)
+        if image:
+            canvas.create_image(decalage_croupier + j * decalage_cartes, position_croupier_y, image=image, anchor="nw", tags="cartes")
+
+    decalage_joueur = (LARGEUR_FENETRE - (len(main_joueur) * decalage_cartes)) // 2
+    for i, (nom, _) in enumerate(main_joueur):
+        image = images_cartes.get(nom)
+        if image:
+            canvas.create_image(decalage_joueur + i * decalage_cartes, position_joueur_y, image=image, anchor="nw", tags="cartes")
+
+def afficher_etat(reveler_carte_croupier=False):
+    dessiner_cartes(canvas, main_joueur, main_croupier, reveler_carte_croupier)
+
+# === GESTION DU JEU ===
+def maj_scores(gagnant):
+    global points_joueur, points_croupier
+    if gagnant == "joueur":
+        points_joueur += 1
+    elif gagnant == "croupier":
+        points_croupier += 1
+    label_scores.config(text=f"Points - Joueur: {points_joueur} | Croupier: {points_croupier}")
+
+def fin_de_partie(message, gagnant=None):
+    afficher_etat(reveler_carte_croupier=True)
+    if gagnant:
+        maj_scores(gagnant)
+    if messagebox.askyesno("Partie terminée", message + "\nVoulez-vous rejouer ?"):
+        rejouer()
+    else:
+        fenetre.quit()
+
+def tirer():
+    main_joueur.append(tirer_carte())
+    afficher_etat()
+    score = calculer_score(main_joueur)
+    if score == 21:
+        fin_de_partie("Vous avez 21! Félicitations!", gagnant="joueur")
+    elif score > 21:
+        fin_de_partie("Vous avez dépassé 21. Vous perdez!", gagnant="croupier")
+
+def rester():
+    def action_croupier():
+        afficher_etat(reveler_carte_croupier=True)
+        if calculer_score(main_croupier) < 17:
+            main_croupier.append(tirer_carte())
+            fenetre.after(700, action_croupier)
+        else:
+            score_joueur = calculer_score(main_joueur)
+            score_croupier = calculer_score(main_croupier)
+            if score_croupier == 21:
+                fin_de_partie("Le croupier a 21! Vous perdez!", gagnant="croupier")
+            elif score_croupier > 21 or score_joueur > score_croupier:
+                fin_de_partie("Félicitations, vous avez gagné!", gagnant="joueur")
+            elif score_joueur == score_croupier:
+                fin_de_partie("Égalité!")
+            else:
+                fin_de_partie("Le croupier gagne. Vous perdez!", gagnant="croupier")
+    action_croupier()
+
+def rejouer():
+    global main_joueur, main_croupier
+    main_joueur = [tirer_carte()]
+    main_croupier = [tirer_carte(), tirer_carte()]
+    afficher_etat()
+
+# === INITIALISATION INTERFACE ===
+fenetre = tk.Tk()
+fenetre.title("Blackjack")
+
+charger_images()
+
+label_scores = tk.Label(fenetre, text="Points - Joueur: 0 | Croupier: 0", font=("Arial", 12, "bold"))
+label_scores.pack(pady=5)
+
+canvas = tk.Canvas(fenetre, width=LARGEUR_FENETRE, height=HAUTEUR_FENETRE)
+canvas.pack()
+
+main_joueur = [tirer_carte()]
+main_croupier = [tirer_carte(), tirer_carte()]
+
+afficher_etat()
+
+boutons_frame = tk.Frame(fenetre, bg="darkgreen")
+boutons_frame.pack(pady=10)
+
+tk.Button(boutons_frame, text="Tirer une carte", command=tirer).pack(side="left", padx=10)
+tk.Button(boutons_frame, text="Rester", command=rester).pack(side="left", padx=10)
+
+fenetre.mainloop()
